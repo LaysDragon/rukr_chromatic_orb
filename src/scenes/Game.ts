@@ -28,11 +28,11 @@ export default class Demo extends Phaser.Scene {
     this.load.image('orb', 'assets/CurrencyRerollSocketColours.webp');
     this.load.image('fish', 'assets/FlatFish.png');
     this.load.image('spot', 'assets/[CITYPNG.COM]Yellow Spot Light Spotlight Effect Transparent PNG - 2000x2000.png');
+    this.load.image('death', 'assets/death.png');
+
     this.load.audio('pop', 'assets/376968__elmasmalo1__bubble-pop.wav');
     this.load.audio('ding', 'assets/411749__natty23__bell-ding.wav');
     this.load.audio('book', 'assets/485502__mortaguado__colocando-libro-sobre-la-mesa-2.wav');
-
-
   }
 
   colors = [
@@ -62,6 +62,7 @@ export default class Demo extends Phaser.Scene {
       this.counter++;
       if (this.counter > 70) {
         this.display.text = this.texts[4];
+        this.add.image(400, 300, 'death').setScale(0.7);
       } else if (this.counter > 50) {
         this.display.text = this.texts[3];
       } else if (this.counter > 20) {
@@ -86,18 +87,17 @@ export default class Demo extends Phaser.Scene {
       }
       this.fishPipelineInstance.hueRotate = 0.05 + Math.random() * 0.9;
       this.sound.play('pop');
-    }, () => {
+    }, undefined, this);
 
-    }, this);
     this.physics.add.overlap(this.bounceRight, orb, () => {
       orb.setVelocity(100, -250);
       this.sound.play('ding', { volume: 0.6, rate: 2 });
-
     }, undefined, this);
     this.physics.add.overlap(this.bounceLeft, orb, () => {
       orb.setVelocity(-100, -250);
       this.sound.play('ding', { volume: 0.6, rate: 2 });
     }, undefined, this);
+
   }
 
   create() {
