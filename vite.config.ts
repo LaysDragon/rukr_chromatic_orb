@@ -14,7 +14,9 @@ export default defineConfig({
           'typeof PLUGIN_FBINSTANT': "'false'",
           'typeof FEATURE_SOUND': "'true'"
         })
-      ]
-    }
-  }
+      ],
+    },
+    
+  },
+  base: '',
 });
