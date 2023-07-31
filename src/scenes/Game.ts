@@ -68,7 +68,7 @@ export default class Demo extends Phaser.Scene {
       this.counter++;
 
 
-      if (this.counter > 70) {
+      if (this.counter >= 70) {
         this.display.text = this.texts[4];
         this.add.image(400, 300, 'death').setScale(0.7);
         if (this.counter == 70) {
