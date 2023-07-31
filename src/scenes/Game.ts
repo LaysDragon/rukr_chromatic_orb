@@ -24,7 +24,6 @@ export default class Demo extends Phaser.Scene {
   ]
 
   preload() {
-    this.load.image('logo', 'assets/phaser3-logo.png');
     this.load.image('orb', 'assets/CurrencyRerollSocketColours.webp');
     this.load.image('fish', 'assets/FlatFish.png');
     this.load.image('spot', 'assets/[CITYPNG.COM]Yellow Spot Light Spotlight Effect Transparent PNG - 2000x2000.png');
