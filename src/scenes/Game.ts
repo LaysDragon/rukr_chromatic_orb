@@ -32,6 +32,7 @@ export default class Demo extends Phaser.Scene {
 
     this.load.audio('pop', 'assets/376968__elmasmalo1__bubble-pop.wav');
     this.load.audio('ding', 'assets/411749__natty23__bell-ding.wav');
+    this.load.audio('hurt', 'assets/y2mate.com - Minecraft hit sound  1080p60fps.mp3');
     this.load.audio('book', 'assets/485502__mortaguado__colocando-libro-sobre-la-mesa-2.wav');
   }
 
@@ -44,36 +45,61 @@ export default class Demo extends Phaser.Scene {
     0xff00ff,
   ];
 
-  createOrb(x: number, y: number) {
-    const orb = this.physics.add.image(x, y, 'orb').setScale(0.4)
-    orb.setBounce(0.1);
-
-    this.sound.play('book', {
-      start: 0.45,
-
+  hurt() {
+    this.sound.play('hurt', {
+      start: 0.78,
       name: 'what_ever_is_this_i_dont_care',
       config: {
-        volume: 0.5,
-        rate: 0.3,
+        volume: 0.8
       }
     });
+    this.cameras.main.shake(200, 0.005);
+  }
 
+  createOrb(x: number, y: number) {
+    const orb = this.physics.add.image(x + Phaser.Math.Between(-40, 40), y + Phaser.Math.Between(-20, 20), 'orb').setScale(0.4)
+    orb.setBounce(0.1);
+
+
+    let triggered = false;
     this.physics.add.overlap(this.fishEatingBox, orb, () => {
+      if (triggered) return;
+      triggered = true;
       this.counter++;
+
+
       if (this.counter > 70) {
         this.display.text = this.texts[4];
         this.add.image(400, 300, 'death').setScale(0.7);
+        if (this.counter == 70) {
+          this.hurt();
+        }
       } else if (this.counter > 50) {
+        this.hurt();
         this.display.text = this.texts[3];
       } else if (this.counter > 20) {
         this.display.text = this.texts[2];
       } else if (this.counter > 5) {
         this.display.text = this.texts[1];
       }
+      if (this.counter > 70) {
+        if (Math.random() > 0.5) {
+          orb.setVelocity(100 + Phaser.Math.Between(-20, 20), -150 + Phaser.Math.Between(-20, 20));
+        } else {
+          orb.setVelocity(-100 + Phaser.Math.Between(-20, 20), -150 + Phaser.Math.Between(-20, 20));
+        }
+      } else {
+        orb.destroy();
 
-      orb.destroy();
+        if (this.counter > 50) {
+          this.fish.setTint(this.colors[Math.floor(Math.random() * this.colors.length)]);
+        }
+        this.fishPipelineInstance.hueRotate = 0.05 + Math.random() * 0.9;
+      }
+
+
+
       this.orbTween?.remove();
-      this.fish.setScale(0.2, 0.2);
       this.orbTween = this.tweens.add({
         targets: this.fish,
         scaleX: 0.22,
@@ -82,19 +108,17 @@ export default class Demo extends Phaser.Scene {
         ease: 'Sine.inOut',
         yoyo: true,
       });
-      if (this.counter > 50) {
-        this.fish.setTint(this.colors[Math.floor(Math.random() * this.colors.length)]);
-      }
-      this.fishPipelineInstance.hueRotate = 0.05 + Math.random() * 0.9;
+      this.fish.setScale(0.2, 0.2);
+
       this.sound.play('pop');
     }, undefined, this);
 
     this.physics.add.overlap(this.bounceRight, orb, () => {
-      orb.setVelocity(100, -250);
+      orb.setVelocity(100 + Phaser.Math.Between(-20, 20), -250 + Phaser.Math.Between(-20, 20));
       this.sound.play('ding', { volume: 0.6, rate: 2 });
     }, undefined, this);
     this.physics.add.overlap(this.bounceLeft, orb, () => {
-      orb.setVelocity(-100, -250);
+      orb.setVelocity(-100 + Phaser.Math.Between(-20, 20), -250 + Phaser.Math.Between(-20, 20));
       this.sound.play('ding', { volume: 0.6, rate: 2 });
     }, undefined, this);
 
@@ -108,7 +132,6 @@ export default class Demo extends Phaser.Scene {
         color: '#b9b079'
       },).setPadding(2);
     this.add.image(400, 50, 'spot').setScale(0.4, 0.6);
-
 
     this.fish = this.add.image(400, 400, 'fish').setScale(0.2);
     this.fishEatingBox = this.physics.add.existing(this.add.rectangle(400, 400, 80, 30), true);
