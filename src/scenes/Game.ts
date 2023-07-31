@@ -58,7 +58,15 @@ export default class Demo extends Phaser.Scene {
   createOrb(x: number, y: number) {
     const orb = this.physics.add.image(x + Phaser.Math.Between(-40, 40), y + Phaser.Math.Between(-20, 20), 'orb').setScale(0.4)
     orb.setBounce(0.1);
+    this.sound.play('book', {
+      start: 0.45,
 
+      name: 'what_ever_is_this_i_dont_care',
+      config: {
+        volume: 0.5,
+        rate: 0.3,
+      }
+    });
 
     let triggered = false;
     this.physics.add.overlap(this.fishEatingBox, orb, () => {
