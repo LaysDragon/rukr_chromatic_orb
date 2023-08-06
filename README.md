@@ -1,10 +1,14 @@
+
 <h1 align="center">
   <br>
-  <a href="https://github.com/geocine/phaser3-rollup-typescript#readme"><img src="https://i.imgur.com/6lcIxDs.png" alt="header" width="600"/></a>
+  <a href="https://laysdragon.github.io/rukr_chromatic_orb/"><img src="public/assets/FlatFish.png" width="200"></a>
   <br>
-  Phaser 3 TypeScript Starter
+  奇怪的電子魚龍垃圾小遊戲 
+  <br>
+  <img src="https://github.com/LaysDragon/rukr_chromatic_orb/actions/workflows/pages.yml/badge.svg">
   <br>
 </h1>
+
 
 This is a [Phaser 3](https://github.com/photonstorm/phaser) starter with [TypeScript](https://www.typescriptlang.org/), [Rollup](https://rollupjs.org) with ⚡️ lightning fast HMR through [Vite](https://vitejs.dev/).
 
