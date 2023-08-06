@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import PhaserMatterCollisionPlugin from 'phaser-matter-collision-plugin';
 import HSLAdjustPipelinePlugin from 'phaser3-rex-plugins/plugins/hsladjustpipeline-plugin.js';
 
 export default {
@@ -12,10 +13,16 @@ export default {
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 300 },
-      debug: false
+    default: 'matter',
+    matter: {
+      enableSleeping: true,
+      // gravity: {
+      //   y: 9.8
+      // },
+      debug: {
+        showBody: false,
+        showStaticBody: false
+      }
     }
   },
   plugins: {
@@ -24,7 +31,13 @@ export default {
       plugin: HSLAdjustPipelinePlugin,
       start: true
     },
-      // ...
+    ],
+    scene: [
+      {
+        plugin: PhaserMatterCollisionPlugin,
+        key: 'matterCollision',
+        mapping: 'matterCollision'
+      }
     ]
   }
 };
