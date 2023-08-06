@@ -3,7 +3,7 @@
   <br>
   <a href="https://laysdragon.github.io/rukr_chromatic_orb/"><img src="public/assets/FlatFish.png" width="200"></a>
   <br>
-  奇怪的電子魚龍垃圾小遊戲 
+  奇怪的電子魚龍養成小遊戲(?)
   <br>
   <img src="https://github.com/LaysDragon/rukr_chromatic_orb/actions/workflows/pages.yml/badge.svg">
   <br>
