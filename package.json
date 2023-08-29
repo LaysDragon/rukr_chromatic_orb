@@ -28,6 +28,7 @@
     "vite": "^2.9.13"
   },
   "dependencies": {
+    "EventDispatcher": "^3.2.0",
     "phaser-matter-collision-plugin": "^1.0.0",
     "phaser3-rex-plugins": "^1.60.4"
   }

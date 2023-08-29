@@ -132,6 +132,11 @@
   "resolved" "https://registry.npmjs.org/estree-walker/-/estree-walker-2.0.2.tgz"
   "version" "2.0.2"
 
+"EventDispatcher@^3.2.0":
+  "integrity" "sha512-F1/kJRumjHHlHvP9z5vcz1df0qD9jv0Rc5HaK6M24/CnISifyxHPjwny8EvDQKNe+j/qDGKgg1oYKTmJFhrKag=="
+  "resolved" "https://registry.npmjs.org/EventDispatcher/-/EventDispatcher-3.2.0.tgz"
+  "version" "3.2.0"
+
 "eventemitter3@^3.1.2":
   "integrity" "sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q=="
   "resolved" "https://registry.npmjs.org/eventemitter3/-/eventemitter3-3.1.2.tgz"
