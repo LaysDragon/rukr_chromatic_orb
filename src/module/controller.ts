@@ -1,6 +1,5 @@
+import * as Phaser from 'phaser';
 import { EventDispatcher } from "EventDispatcher";
-import HslAdjustPostFxPipeline from "phaser3-rex-plugins/plugins/hsladjustpipeline";
-import HslAdjustPipelinePlugin from "phaser3-rex-plugins/plugins/hsladjustpipeline-plugin";
 import { CollisionCategory } from "../collision_category";
 
 interface CharacterEventsMap {

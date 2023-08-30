@@ -1,4 +1,5 @@
 import { Module, OrbEntry, CharacterController, OrbItem, Effect } from "./controller";
+import * as Phaser from 'phaser';
 
 export class POEModule extends Module {
   orbs: OrbEntry[] = [
