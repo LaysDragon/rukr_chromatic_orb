@@ -193,14 +193,14 @@ export class Module {
     }
 
     getOrbWeightEntries(): WeightEntry[] {
-        return this.orbs.map(orb => ({ weight: orb.weight, createOrb: this.builderWrapper((x: number, y: number) => orb.createOrb(x, y, this)) }));
+        return this.orbs.map(orb => ({ weight: orb.weight(this), createOrb: this.builderWrapper((x: number, y: number) => orb.createOrb(x, y, this)) }));
     }
 
 }
 
 export class OrbEntry {
     constructor(
-        public weight: number,
+        public weight: (module: Module) => number,
         private builder: (x: number, y: number, module: Module) => OrbItem,
         public preload: (scene: Phaser.Scene) => void,
     ) { }

@@ -22,7 +22,7 @@ export class POEModule extends Module {
 class ColorOrb extends OrbItem<Phaser.Physics.Matter.Image> {
 
   static entry = new OrbEntry(
-    1,
+    (module)=>1,
     (x, y, module) => new ColorOrb(x, y, module),
     (scene) => scene.load.image('poe_color_orb', 'assets/poe/CurrencyRerollSocketColours.webp'),
   );

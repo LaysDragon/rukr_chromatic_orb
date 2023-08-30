@@ -15,7 +15,7 @@ export class MarioModule extends Module {
 
 class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
     static entry: OrbEntry = new OrbEntry(
-        1,
+        (module) => module.controller.death ? 0.1 : 0.01,
         (x, y, module) => new InvincibleStar(x, y, module),
         (scene) => {
             scene.load.image('mario_star', 'assets/mario/mario_star.png');
@@ -69,7 +69,7 @@ class Invincible extends Effect {
     timer: number = 10000;
 
     apply(): void {
-        this.module.scene.sound.play('mario_invincible', { name: 'what', start: 0.2});
+        this.module.scene.sound.play('mario_invincible', { name: 'what', start: 0.2 });
     }
     reapply(effect: this): void { }
     inactive(): void {
