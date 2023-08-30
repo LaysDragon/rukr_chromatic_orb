@@ -1,4 +1,4 @@
-import { GameObjects, Scene } from "phaser";
+import { GameObjects, Scene, Math } from "phaser";
 import { Effect, Module, OrbEntry, OrbItem } from "./controller";
 
 export class MarioModule extends Module {
@@ -8,6 +8,7 @@ export class MarioModule extends Module {
 
     static preload(scene: Scene): void {
         InvincibleStar.entry.preload(scene);
+        Invincible.preload(scene);
     }
 }
 
@@ -56,13 +57,42 @@ class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
     }
 
     applyAction(): void {
-
+        this.module.controller.addEffect(new Invincible(this.module));
     }
 }
 
 class Invincible extends Effect {
-    apply(): void { }
+    static preload(scene: Scene): void {
+        scene.load.audio('mario_invincible', 'assets/mario/star_power.m4a')
+    }
+
+    timer: number = 10000;
+
+    apply(): void {
+        this.module.scene.sound.play('mario_invincible', { name: 'what', start: 0.2});
+    }
+    reapply(effect: this): void { }
+    inactive(): void {
+        this.module.scene.sound.stopByKey('mario_invincible');
+        this.module.controller.colorEffect.contrast(0);
+        this.module.controller.colorEffect.hue(this.hue, true);
+
+    }
+    hueTimer = 0;
+    hue = Math.Between(50, 300);
     update(time: number, delta: number): void {
+        if (time % 120 > 60) {
+            this.module.controller.colorEffect.contrast(0.5);
+        } else {
+            this.module.controller.colorEffect.contrast(0);
+        }
+
+        this.module.controller.colorEffect.hue(this.hue, true);
+        this.hueTimer += delta;
+        if (this.hueTimer > 60) {
+            this.hue = (this.hue + 90) % 360;
+            this.hueTimer = 0;
+        }
 
     }
 

@@ -64,16 +64,17 @@ class ChangeColorEffect extends Effect {
     0xff00ff,
   ];
 
-  // constructor(public module: POEOrbModule) { super(module); }
+  skipRepeat = false;
+
   apply(): void {
     if (this.module.controller.counter > 50) {
       (this.module.controller.character as unknown as Phaser.GameObjects.Components.Tint).setTint(this.colors[Math.floor(Math.random() * this.colors.length)]);
     }
 
-    this.module.controller.colorEffect.hue((0.05 + Math.random() * 0.9)*360)
-    // this.module.controller.hslPipeline.hueRotate = 0.05 + Math.random() * 0.9;
-
+    this.module.controller.colorEffect.hue((0.05 + Math.random() * 0.9) * 360)
   }
+  reapply(effect: this): void { }
+  inactive(): void { }
   update(): void { }
 
 }

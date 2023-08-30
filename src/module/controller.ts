@@ -108,9 +108,39 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
     }
 
     addEffect(effect: Effect) {
-        this.effects = this.effects.filter(e => !e.equal(effect));
+        let oldEffectIndex = this.effects.findIndex(e => e.equal(effect));
+        let oldEffect = this.effects[oldEffectIndex];
+        if (oldEffect !== undefined) {
+            if (oldEffect.skipRepeat) {
+                if (oldEffect.resetTimerOnRepeat && oldEffect.timer > 0) {
+                    clearTimeout(oldEffect.timerHolder);
+                    oldEffect.timerHolder = setTimeout(() => { this.removeEffect(effect); }, oldEffect.timer);
+                }
+
+                oldEffect.reapply(effect);
+                return;
+            }
+
+            this.effects.splice(oldEffectIndex, 1);
+            oldEffect.inactive();
+        }
         this.effects.push(effect);
+        if (effect.timer > 0) {
+            effect.timerHolder = setTimeout(() => { this.removeEffect(effect); }, effect.timer);
+        }
         effect.apply();
+    }
+
+    removeEffect(effect: Effect): Effect | undefined {
+        let oldEffectIndex = this.effects.findIndex(e => e.equal(effect));
+        let oldEffect = this.effects[oldEffectIndex];
+        if (oldEffect !== undefined) {
+            clearTimeout(oldEffect.timerHolder);
+            oldEffect.inactive();
+            this.effects.splice(oldEffectIndex, 1);
+            return;
+        }
+        return;
     }
 
     update(time: number, delta: number) {
@@ -220,8 +250,18 @@ export abstract class OrbItem<T extends Phaser.GameObjects.GameObject = Phaser.G
 }
 
 export abstract class Effect {
+    static preload(scene: Phaser.Scene) { }
     constructor(public module: Module) { }
+    skipRepeat = true;
+
+    /** timer manage by controller */
+    resetTimerOnRepeat = true;
+    timer = 0;
+    timerHolder?: number;
+
     abstract apply(): void;
+    abstract reapply(effect: this): void;
+    abstract inactive(): void;
     abstract update(time: number, delta: number): void;
 
     equal(effect: Effect) {
