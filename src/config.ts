@@ -1,9 +1,7 @@
-import Phaser from 'phaser';
-import PhaserMatterCollisionPlugin from 'phaser-matter-collision-plugin';
-import HSLAdjustPipelinePlugin from 'phaser3-rex-plugins/plugins/hsladjustpipeline-plugin.js';
+import * as Phaser from 'phaser';
 
 export default {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   parent: 'game',
   backgroundColor: '#090300',
   scale: {
@@ -20,24 +18,10 @@ export default {
       //   y: 9.8
       // },
       debug: {
-        showBody: false,
-        showStaticBody: false
+        showBody: true,
+        showStaticBody: true
       }
     }
   },
-  plugins: {
-    global: [{
-      key: 'rexHSLAdjustPipeline',
-      plugin: HSLAdjustPipelinePlugin,
-      start: true
-    },
-    ],
-    scene: [
-      {
-        plugin: PhaserMatterCollisionPlugin,
-        key: 'matterCollision',
-        mapping: 'matterCollision'
-      }
-    ]
-  }
-};
+  plugins: {},
+} as Phaser.Types.Core.GameConfig;

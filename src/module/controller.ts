@@ -25,13 +25,13 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
     death: boolean = false;
     modules: Module[] = [];
     effects: Effect[] = [];
-    hslPipeline: HslAdjustPostFxPipeline;
     orbTween?: Phaser.Tweens.Tween;
+    colorEffect: Phaser.FX.ColorMatrix;
 
 
     constructor(public scene: Phaser.Scene, public character: Phaser.GameObjects.GameObject, public collideBox: MatterJS.BodyType) {
         super({ validEventTypes: ['newOrb', 'counter', 'death'] });
-        this.hslPipeline = (this.scene.plugins.get('rexHSLAdjustPipeline') as HslAdjustPipelinePlugin).add(this.character, {});
+        this.colorEffect = (this.character as unknown as Phaser.GameObjects.Components.PostPipeline).postFX.addColorMatrix();
     }
 
     static preload(scene: Phaser.Scene) {
@@ -41,13 +41,12 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
 
     addModule(module: Module) {
         this.modules.push(module);
-        // this.orbs.push(...module.orbs);
         module.init(this, this.scene);
     }
 
     pickOrbEntry(): WeightEntry {
         let orbsEntries = this.modules.flatMap(m => m.getOrbWeightEntries());
-        for (let i = 0; i++; i < orbsEntries.length - 1) {
+        for (let i = 0; i < orbsEntries.length - 1; i++) {
             orbsEntries[i + 1].weight += orbsEntries[i].weight;
         }
         let rand = Math.random() * orbsEntries[orbsEntries.length - 1].weight;
@@ -66,7 +65,7 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
     onOrbCollide(orb: OrbItem) {
         this.counter++;
         orb.applyAction();
-        this.orbTween?.remove();
+        // this.orbTween?.remove();
         this.orbTween = this.scene.tweens.add({
             targets: this.character,
             scaleX: 0.22,
@@ -115,9 +114,12 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
         effect.apply();
     }
 
-    update() {
+    update(time: number, delta: number) {
+        for (let module of this.modules) {
+            module.update(time, delta);
+        }
         for (let effect of this.effects) {
-            effect.update();
+            effect.update(time, delta);
         }
 
     }
@@ -132,6 +134,7 @@ export class Module {
     public controller!: CharacterController;
     public scene!: Phaser.Scene;
     orbs: OrbEntry[] = [];
+    orbInstances: OrbItem[] = [];
 
     constructor() { }
 
@@ -144,9 +147,20 @@ export class Module {
 
     builderWrapper(builder: (x: number, y: number) => OrbItem) {
         return (x: number, y: number) => {
-            //...
-            return builder(x, y);
+            let instance = builder(x, y);
+            this.orbInstances.push(instance)
+            return instance;
         };
+    }
+
+    update(time: number, delta: number): void {
+        for (let orb of this.orbInstances) {
+            orb.update(time, delta);
+        }
+    }
+
+    onOrbDestroyed(orb: OrbItem) {
+        this.orbInstances = this.orbInstances.filter(o => orb !== o);
     }
 
     getOrbWeightEntries(): WeightEntry[] {
@@ -169,14 +183,15 @@ export class OrbEntry {
 }
 
 
-export abstract class OrbItem {
-    obj: Phaser.GameObjects.GameObject;
+export abstract class OrbItem<T extends Phaser.GameObjects.GameObject = Phaser.GameObjects.GameObject> {
+    static entry: OrbEntry;
+    obj: T;
     constructor(x: number, y: number, public module: Module) {
         this.obj = this.createObj(x, y);
         this.configObj();
     }
 
-    abstract createObj(x: number, y: number): Phaser.GameObjects.GameObject;
+    abstract createObj(x: number, y: number): T;
 
     configObj() {
         (this.obj as unknown as Phaser.Physics.Matter.Components.Collision).setCollisionCategory(CollisionCategory.CATEGORY_ORB);
@@ -194,9 +209,13 @@ export abstract class OrbItem {
         });
     }
 
+    abstract update(time: number, delta: number): void;
+
     abstract applyAction(): void;
+    abstract bounceSound(): void;
 
     destroy() {
+        this.module.onOrbDestroyed(this);
         this.obj.destroy();
     }
 }
@@ -204,7 +223,7 @@ export abstract class OrbItem {
 export abstract class Effect {
     constructor(public module: Module) { }
     abstract apply(): void;
-    abstract update(): void;
+    abstract update(time: number, delta: number): void;
 
     equal(effect: Effect) {
         return effect.constructor == this.constructor;

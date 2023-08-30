@@ -1,7 +1,8 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { CollisionCategory } from '../collision_category';
 import { CharacterController } from '../module/controller';
-import { POEModule } from '../module/poe_module';
+import { POEModule } from '../module/poe.module';
+import { MarioModule } from '../module/mario.module';
 export default class Demo extends Phaser.Scene {
   fish!: Phaser.GameObjects.Image;
   fishEatingBox!: MatterJS.BodyType;
@@ -31,6 +32,7 @@ export default class Demo extends Phaser.Scene {
 
     CharacterController.preload(this);
     POEModule.preload(this);
+    MarioModule.preload(this);
   }
 
 
@@ -67,6 +69,9 @@ export default class Demo extends Phaser.Scene {
 
     this.controller = new CharacterController(this, this.fish, this.fishEatingBox);
     this.controller.addModule(new POEModule());
+    this.controller.addModule(new MarioModule());
+
+    this.controller.colorEffect.hue((0.3 + Math.random() * 0.6) * 360);
 
     this.input.on('pointerdown', (pointer: any) => {
       this.controller.createOrb(pointer.x, pointer.y);
@@ -75,12 +80,18 @@ export default class Demo extends Phaser.Scene {
       let orb = event.orb.obj as unknown as (Phaser.Physics.Matter.Components.Collision & Phaser.Physics.Matter.Components.Force & Phaser.GameObjects.GameObject);
       orb.setCollidesWith(CollisionCategory.CATEGORY_PLATFORM);
       orb.setOnCollideWith(this.bounceRight, () => {
-        this.matter.world.once('afterupdate', () => { orb.applyForce(new Phaser.Math.Vector2(0.01 + Phaser.Math.FloatBetween(0, 0.01), -0.015 + Phaser.Math.FloatBetween(-0.01, 0))) });
-        this.sound.play('ding', { volume: 0.6, rate: 2 });
+        this.matter.world.once('afterupdate', () => {
+          if (orb.body != undefined)
+            orb.applyForce(new Phaser.Math.Vector2(0.01 + Phaser.Math.FloatBetween(0, 0.01), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
+        });
+        event.orb.bounceSound();
       });
       orb.setOnCollideWith(this.bounceLeft as MatterJS.BodyType, () => {
-        this.matter.world.once('afterupdate', () => { orb.applyForce(new Phaser.Math.Vector2(-(0.01 + Phaser.Math.FloatBetween(0, 0.01)), -0.015 + Phaser.Math.FloatBetween(-0.01, 0))) });
-        this.sound.play('ding', { volume: 0.6, rate: 2 });
+        this.matter.world.once('afterupdate', () => {
+          if (orb.body != undefined)
+            orb.applyForce(new Phaser.Math.Vector2(-(0.01 + Phaser.Math.FloatBetween(0, 0.01)), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
+        });
+        event.orb.bounceSound();
       });
     });
 
@@ -96,7 +107,10 @@ export default class Demo extends Phaser.Scene {
         this.display.text = this.texts[1];
       }
     });
+  }
 
+  update(time: number, delta: number): void {
+    this.controller.update(time, delta);
   }
 }
 
