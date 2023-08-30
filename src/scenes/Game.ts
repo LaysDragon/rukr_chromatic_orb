@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
 import { CollisionCategory } from '../collision_category';
-import { CharacterController, SoundType } from '../module/controller';
+import { CharacterController, EffectState, SoundType } from '../module/controller';
 import { POEModule } from '../module/poe.module';
-import { MarioModule } from '../module/mario.module';
+import { Invincible, InvincibleStar, MarioModule } from '../module/mario.module';
 export default class Demo extends Phaser.Scene {
   fish!: Phaser.GameObjects.Image;
   fishEatingBox!: MatterJS.BodyType;
@@ -16,9 +16,9 @@ export default class Demo extends Phaser.Scene {
     super('GameScene');
   }
   texts = [
-    '喔不!一只野生魯克魚龍誤食三色石搞丟了自己的顏色\n繼續餵食三色石幫助他找回原本的顏色吧!!',
-    '沒錯，繼續下去!',
-    '...',
+    '喔不！一只野生魯克魚龍誤食三色石搞丟了自己的顏色\n繼續餵食三色石幫助他找回原本的顏色吧！！',
+    '沒錯，繼續下去！',
+    '。。。',
     '他看起來像是三色石中毒了',
     '老天，我們做了什麼。。。',
   ]
@@ -76,7 +76,7 @@ export default class Demo extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: any) => {
       this.controller.createOrb(pointer.x, pointer.y);
     });
-    this.controller.on('newOrb', (event) => {
+    this.controller.on('orb', (event) => {
       let orb = event.orb.obj as unknown as (Phaser.Physics.Matter.Components.Collision & Phaser.Physics.Matter.Components.Force & Phaser.GameObjects.GameObject);
       orb.setCollidesWith(CollisionCategory.CATEGORY_PLATFORM);
       orb.setOnCollideWith(this.bounceRight, () => {
@@ -84,29 +84,40 @@ export default class Demo extends Phaser.Scene {
           if (orb.body != undefined)
             orb.applyForce(new Phaser.Math.Vector2(0.01 + Phaser.Math.FloatBetween(0, 0.01), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
         });
-        event.orb.triggerSound(SoundType.bounceHard,'*');
+        event.orb.triggerSound(SoundType.bounceHard, '*');
       });
       orb.setOnCollideWith(this.bounceLeft as MatterJS.BodyType, () => {
         this.matter.world.once('afterupdate', () => {
           if (orb.body != undefined)
             orb.applyForce(new Phaser.Math.Vector2(-(0.01 + Phaser.Math.FloatBetween(0, 0.01)), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
         });
-        event.orb.triggerSound(SoundType.bounceHard,'*');
+        event.orb.triggerSound(SoundType.bounceHard, '*');
       });
     });
 
     this.controller.on('counter', (event) => {
-      if (event.counter >= 70) {
+      if (event.counter == 70) {
         this.display.text = this.texts[4];
         this.controller.setDeath();
-      } else if (event.counter > 50) {
+      } else if (event.counter == 50) {
         this.display.text = this.texts[3];
-      } else if (event.counter > 20) {
+      } else if (event.counter == 20) {
         this.display.text = this.texts[2];
-      } else if (event.counter > 5) {
+      } else if (event.counter == 5) {
         this.display.text = this.texts[1];
       }
     });
+
+    this.controller.on('orb', (event) => {
+      if (event.orb instanceof InvincibleStar) {
+        this.display.text = '無敵星星。。';
+      }
+    });
+    this.controller.on('effect', (event) => {
+      if(event.effect instanceof Invincible && event.state === EffectState.inactive){
+        this.display.text = '沒有用啊！！！！！';
+      }
+    })
   }
 
   update(time: number, delta: number): void {

@@ -3,13 +3,26 @@ import { EventDispatcher } from "EventDispatcher";
 import { CollisionCategory } from "../collision_category";
 
 interface CharacterEventsMap {
-    newOrb(event: NewOrbEvent): void;
+    orb(event: OrbEvent): void;
+    effect(event: EffectEvent): void;
     counter(event: CounterEvent): void;
     death(): void;
 }
-export class NewOrbEvent extends Event {
+export class OrbEvent extends Event {
     constructor(public orb: OrbItem) {
-        super('newOrb');
+        super('orb');
+    }
+}
+
+export enum EffectState {
+    apply = 'apply',
+    reapply = 'reapply',
+    skip = 'skip',
+    inactive = 'inactive',
+}
+export class EffectEvent extends Event {
+    constructor(public effect: Effect, public state: EffectState) {
+        super('effect');
     }
 }
 
@@ -29,7 +42,7 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
 
 
     constructor(public scene: Phaser.Scene, public character: Phaser.GameObjects.GameObject, public collideBox: MatterJS.BodyType) {
-        super({ validEventTypes: ['newOrb', 'counter', 'death'] });
+        super({ validEventTypes: ['orb', 'effect', 'counter', 'death'] });
         this.colorEffect = (this.character as unknown as Phaser.GameObjects.Components.PostPipeline).postFX.addColorMatrix();
     }
 
@@ -58,7 +71,7 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
         this.collideBox.setOnCollideWith(orb.obj.body as MatterJS.BodyType, () => {
             this.onOrbCollide(orb);
         });
-        this.trigger(new NewOrbEvent(orb));
+        queueMicrotask(() => this.trigger(new OrbEvent(orb)));
     }
 
     onOrbCollide(orb: OrbItem) {
@@ -74,15 +87,15 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
             yoyo: true,
         });
         (this.character as unknown as Phaser.GameObjects.Components.Transform).setScale(0.2, 0.2);
-        if(orb.destroyed){
+        if (orb.destroyed) {
             orb.triggerSound(SoundType.consumed, 'character', () => this.scene.sound.play('character_pop', { volume: 0.2 }));
-        }else{
+        } else {
             orb.triggerSound(SoundType.bounceSoft, 'character', () => this.scene.sound.play('character_pop', { volume: 0.2 }));
         }
-        
 
 
-        this.trigger(new CounterEvent(this.counter));
+
+        queueMicrotask(() => this.trigger(new CounterEvent(this.counter)));
         if (this.death) {
             let forceX = 0.01 + Phaser.Math.FloatBetween(0, 0.01);
             if (Math.random() > 0.5) {
@@ -108,7 +121,7 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
 
     setDeath() {
         this.death = true;
-        this.trigger('death');
+        queueMicrotask(() => this.trigger('death'));
     }
 
     addEffect(effect: Effect) {
@@ -122,17 +135,21 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
                 }
 
                 oldEffect.reapply(effect);
+                queueMicrotask(() => this.trigger(new EffectEvent(oldEffect, EffectState.reapply)));
+                queueMicrotask(() => this.trigger(new EffectEvent(effect, EffectState.skip)));
                 return;
             }
 
             this.effects.splice(oldEffectIndex, 1);
             oldEffect.inactive();
+            queueMicrotask(() => this.trigger(new EffectEvent(oldEffect, EffectState.inactive)));
         }
         this.effects.push(effect);
         if (effect.timer > 0) {
             effect.timerHolder = setTimeout(() => { this.removeEffect(effect); }, effect.timer);
         }
         effect.apply();
+        queueMicrotask(() => this.trigger(new EffectEvent(effect, EffectState.apply)));
     }
 
     removeEffect(effect: Effect): Effect | undefined {
@@ -142,6 +159,7 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
             clearTimeout(oldEffect.timerHolder);
             oldEffect.inactive();
             this.effects.splice(oldEffectIndex, 1);
+            queueMicrotask(() => this.trigger(new EffectEvent(oldEffect, EffectState.inactive)));
             return;
         }
         return;
@@ -267,7 +285,6 @@ export abstract class OrbItem<T extends Phaser.GameObjects.GameObject = Phaser.G
 
         //TODO: better place?
         queueMicrotask(() => this.triggerSound(SoundType.place, '*'));
-        ;
     }
 
     abstract update(time: number, delta: number): void;

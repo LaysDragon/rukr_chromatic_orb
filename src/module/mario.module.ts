@@ -14,7 +14,7 @@ export class MarioModule extends Module {
 }
 
 
-class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
+export class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
 
     static entry: OrbEntry = new OrbEntry(
         (module) => module.controller.death ? 0.01 : 0.001,
@@ -70,7 +70,7 @@ class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
     }
 }
 
-class Invincible extends Effect {
+export class Invincible extends Effect {
     static preload(scene: Scene): void {
         scene.load.audio('mario_invincible', 'assets/mario/star_power.m4a')
     }
