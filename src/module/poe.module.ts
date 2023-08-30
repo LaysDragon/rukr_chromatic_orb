@@ -1,4 +1,4 @@
-import { Module, OrbEntry, CharacterController, OrbItem, Effect } from "./controller";
+import { Module, OrbEntry, CharacterController, OrbItem, Effect, SoundType, OptionalRecord } from "./controller";
 import * as Phaser from 'phaser';
 
 export class POEModule extends Module {
@@ -20,15 +20,19 @@ export class POEModule extends Module {
 }
 
 class ColorOrb extends OrbItem<Phaser.Physics.Matter.Image> {
-
   static entry = new OrbEntry(
-    (module)=>1,
+    (module) => 1,
     (x, y, module) => new ColorOrb(x, y, module),
     (scene) => scene.load.image('poe_color_orb', 'assets/poe/CurrencyRerollSocketColours.webp'),
   );
 
+  soundMatrix: OptionalRecord<SoundType, Record<string, () => void>> = {
+    // 'place': { '*': () => { } },
+  };
+
+
   createObj(x: number, y: number): Phaser.Physics.Matter.Image {
-    return this.module.scene.matter.add.image(x, y, 'poe_color_orb')
+    return this.scene.matter.add.image(x, y, 'poe_color_orb')
       .setScale(0.4)
       .setAngle(Phaser.Math.Between(0, 360));
   }
@@ -38,19 +42,18 @@ class ColorOrb extends OrbItem<Phaser.Physics.Matter.Image> {
 
   }
 
-  bounceSound(): void {
-    this.module.scene.sound.play('ding', { volume: 0.6, rate: 2 });
-  }
-
   applyAction(): void {
-    if (this.module.controller.counter >= 70) {
-      if (this.module.controller.counter == 70) {
-        this.module.controller.hurt();
+    if (this.controller.death) return;
+    if (this.controller.counter >= 70) {
+      if (this.controller.counter == 70) {
+        this.controller.hurt();
       }
-    } else if (this.module.controller.counter > 50) {
-      this.module.controller.hurt();
+    } else if (this.controller.counter > 50) {
+      this.controller.hurt();
     }
-    this.module.controller.addEffect(new ChangeColorEffect(this.module));
+    this.controller.addEffect(new ChangeColorEffect(this.module));
+    this.destroy();
+
   }
 }
 
@@ -67,11 +70,11 @@ class ChangeColorEffect extends Effect {
   skipRepeat = false;
 
   apply(): void {
-    if (this.module.controller.counter > 50) {
-      (this.module.controller.character as unknown as Phaser.GameObjects.Components.Tint).setTint(this.colors[Math.floor(Math.random() * this.colors.length)]);
+    if (this.controller.counter > 50) {
+      (this.controller.character as unknown as Phaser.GameObjects.Components.Tint).setTint(this.colors[Math.floor(Math.random() * this.colors.length)]);
     }
 
-    this.module.controller.colorEffect.hue((0.05 + Math.random() * 0.9) * 360)
+    this.controller.colorEffect.hue((0.05 + Math.random() * 0.9) * 360)
   }
   reapply(effect: this): void { }
   inactive(): void { }

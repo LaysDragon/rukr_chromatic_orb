@@ -1,5 +1,5 @@
 import { GameObjects, Scene, Math } from "phaser";
-import { Effect, Module, OrbEntry, OrbItem } from "./controller";
+import { Effect, Module, OptionalRecord, OrbEntry, OrbItem, SoundType } from "./controller";
 
 export class MarioModule extends Module {
     orbs: OrbEntry[] = [
@@ -9,13 +9,15 @@ export class MarioModule extends Module {
     static preload(scene: Scene): void {
         InvincibleStar.entry.preload(scene);
         Invincible.preload(scene);
+        scene.load.audio('eating_powerup', 'assets/mario/Mushroom Sound Effect.m4a');
     }
 }
 
 
 class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
+
     static entry: OrbEntry = new OrbEntry(
-        (module) => module.controller.death ? 0.1 : 0.01,
+        (module) => module.controller.death ? 0.01 : 0.001,
         (x, y, module) => new InvincibleStar(x, y, module),
         (scene) => {
             scene.load.image('mario_star', 'assets/mario/mario_star.png');
@@ -23,10 +25,20 @@ class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
     );
 
     colorEffect!: Phaser.FX.ColorMatrix;
-
+    override soundMatrix: OptionalRecord<SoundType, Record<string, () => void>> = {
+        consumed: {
+            '*': () => this.scene.sound.play('eating_powerup', {
+                start: 0.1,
+                name: 'blablabla',
+                config: {
+                    volume: 0.1
+                }
+            }),
+        }
+    };
 
     createObj(x: number, y: number): Phaser.Physics.Matter.Image {
-        return this.module.scene.matter.add.image(x, y, 'mario_star')
+        return this.scene.matter.add.image(x, y, 'mario_star')
             .setScale(0.15);
     }
 
@@ -52,12 +64,9 @@ class InvincibleStar extends OrbItem<Phaser.Physics.Matter.Image> {
         }
     }
 
-    bounceSound(): void {
-        this.module.scene.sound.play('ding', { volume: 0.6, rate: 2 });
-    }
-
     applyAction(): void {
-        this.module.controller.addEffect(new Invincible(this.module));
+        this.controller.addEffect(new Invincible(this.module));
+        this.destroy();
     }
 }
 
@@ -68,26 +77,32 @@ class Invincible extends Effect {
 
     timer: number = 10000;
 
+    tint = 0;
     apply(): void {
-        this.module.scene.sound.play('mario_invincible', { name: 'what', start: 0.2 });
+        this.scene.sound.play('mario_invincible', { name: 'what', config: { loop: true } });
+        (this.controller.character as GameObjects.Image).tint;
+        this.tint = (this.controller.character as unknown as GameObjects.Components.Tint).tintTopLeft;
+        (this.controller.character as unknown as GameObjects.Components.Tint).clearTint();
     }
     reapply(effect: this): void { }
     inactive(): void {
-        this.module.scene.sound.stopByKey('mario_invincible');
-        this.module.controller.colorEffect.contrast(0);
-        this.module.controller.colorEffect.hue(this.hue, true);
-
+        this.scene.sound.stopByKey('mario_invincible');
+        this.controller.colorEffect.contrast(0);
+        this.controller.colorEffect.hue(this.hue, true);
+        (this.controller.character as unknown as GameObjects.Components.Tint).setTint(this.tint);
     }
+
     hueTimer = 0;
     hue = Math.Between(50, 300);
     update(time: number, delta: number): void {
+
         if (time % 120 > 60) {
-            this.module.controller.colorEffect.contrast(0.5);
+            this.controller.colorEffect.contrast(0.5);
         } else {
-            this.module.controller.colorEffect.contrast(0);
+            this.controller.colorEffect.contrast(0);
         }
 
-        this.module.controller.colorEffect.hue(this.hue, true);
+        this.controller.colorEffect.hue(this.hue, true);
         this.hueTimer += delta;
         if (this.hueTimer > 60) {
             this.hue = (this.hue + 90) % 360;

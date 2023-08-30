@@ -74,7 +74,13 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
             yoyo: true,
         });
         (this.character as unknown as Phaser.GameObjects.Components.Transform).setScale(0.2, 0.2);
-        this.scene.sound.play('character_pop', { volume: 0.2 });
+        if(orb.destroyed){
+            orb.triggerSound(SoundType.consumed, 'character', () => this.scene.sound.play('character_pop', { volume: 0.2 }));
+        }else{
+            orb.triggerSound(SoundType.bounceSoft, 'character', () => this.scene.sound.play('character_pop', { volume: 0.2 }));
+        }
+        
+
 
         this.trigger(new CounterEvent(this.counter));
         if (this.death) {
@@ -86,8 +92,6 @@ export class CharacterController extends EventDispatcher<CharacterEventsMap> {
                 if (orb.obj.body != undefined)
                     (orb.obj as unknown as Phaser.Physics.Matter.Components.Force).applyForce(new Phaser.Math.Vector2(forceX, -0.01));
             });
-        } else {
-            orb.destroy();
         }
     }
 
@@ -211,41 +215,79 @@ export class OrbEntry {
     };
 }
 
+export enum SoundType {
+    bounceHard = 'bounceHard',
+    bounceSoft = 'bounceSoft',
+    consumed = 'consumed',
+    place = 'place',
+    hurt = 'hurt',
+}
+
+export type OptionalRecord<K extends keyof any, T> = {
+    [P in K]?: T;
+};
 
 export abstract class OrbItem<T extends Phaser.GameObjects.GameObject = Phaser.GameObjects.GameObject> {
     static entry: OrbEntry;
     obj: T;
+    destroyed = false;
     constructor(x: number, y: number, public module: Module) {
         this.obj = this.createObj(x, y);
         this.configObj();
     }
 
+    get scene() {
+        return this.module.scene;
+    }
+
+    get controller() {
+        return this.module.controller;
+    }
+
     abstract createObj(x: number, y: number): T;
+    defaultSoundMatrix: OptionalRecord<SoundType, Record<string, () => void>> = {
+        'place': {
+            '*': () => this.scene.sound.play('book', {
+                start: 0.45,
+                name: 'what_ever_is_this_i_dont_care',
+                config: {
+                    volume: 0.7,
+                    rate: 0.3,
+                }
+            })
+        },
+        'bounceHard': { '*': () => this.scene.sound.play('ding', { volume: 0.6, rate: 2 }) },
+    };
+    abstract soundMatrix: OptionalRecord<SoundType, Record<string, () => void>>;
 
     configObj() {
         (this.obj as unknown as Phaser.Physics.Matter.Components.Collision).setCollisionCategory(CollisionCategory.CATEGORY_ORB);
         (this.obj as unknown as Phaser.Physics.Matter.Components.Bounce).setBounce(0.5);
         (this.obj as unknown as Phaser.Physics.Matter.Components.Velocity).setAngularVelocity(Phaser.Math.FloatBetween(-0.2, 0.2));
-        //TODO: 應該有更適合的地方用來播放音效
-        this.module.scene.sound.play('book', {
-            start: 0.45,
 
-            name: 'what_ever_is_this_i_dont_care',
-            config: {
-                volume: 0.7,
-                rate: 0.3,
-            }
-        });
+        //TODO: better place?
+        queueMicrotask(() => this.triggerSound(SoundType.place, '*'));
+        ;
     }
 
     abstract update(time: number, delta: number): void;
 
     abstract applyAction(): void;
-    abstract bounceSound(): void;
+
+    triggerSound(type: SoundType, interactId: string, fallback?: () => void): void {
+        (this.soundMatrix[type]?.[interactId] ??
+            this.soundMatrix[type]?.['*'] ??
+            this.defaultSoundMatrix[type]?.[interactId] ??
+            this.defaultSoundMatrix[type]?.['*'] ??
+            fallback!)();
+    }
+
+    // abstract bounceSound(): void;
 
     destroy() {
         this.module.onOrbDestroyed(this);
         this.obj.destroy();
+        this.destroyed = true;
     }
 }
 
@@ -258,6 +300,14 @@ export abstract class Effect {
     resetTimerOnRepeat = true;
     timer = 0;
     timerHolder?: number;
+
+    get scene() {
+        return this.module.scene;
+    }
+
+    get controller() {
+        return this.module.controller;
+    }
 
     abstract apply(): void;
     abstract reapply(effect: this): void;

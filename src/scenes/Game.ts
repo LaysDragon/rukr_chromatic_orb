@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { CollisionCategory } from '../collision_category';
-import { CharacterController } from '../module/controller';
+import { CharacterController, SoundType } from '../module/controller';
 import { POEModule } from '../module/poe.module';
 import { MarioModule } from '../module/mario.module';
 export default class Demo extends Phaser.Scene {
@@ -84,14 +84,14 @@ export default class Demo extends Phaser.Scene {
           if (orb.body != undefined)
             orb.applyForce(new Phaser.Math.Vector2(0.01 + Phaser.Math.FloatBetween(0, 0.01), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
         });
-        event.orb.bounceSound();
+        event.orb.triggerSound(SoundType.bounceHard,'*');
       });
       orb.setOnCollideWith(this.bounceLeft as MatterJS.BodyType, () => {
         this.matter.world.once('afterupdate', () => {
           if (orb.body != undefined)
             orb.applyForce(new Phaser.Math.Vector2(-(0.01 + Phaser.Math.FloatBetween(0, 0.01)), -0.015 + Phaser.Math.FloatBetween(-0.01, 0)));
         });
-        event.orb.bounceSound();
+        event.orb.triggerSound(SoundType.bounceHard,'*');
       });
     });
 
