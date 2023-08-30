@@ -18,8 +18,8 @@ export default {
       //   y: 9.8
       // },
       debug: {
-        showBody: true,
-        showStaticBody: true
+        // showBody: true,
+        // showStaticBody: true
       }
     }
   },
