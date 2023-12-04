@@ -3,7 +3,7 @@ import * as Phaser from 'phaser';
 export default {
   type: Phaser.WEBGL,
   parent: 'game',
-  backgroundColor: '#090300',
+  transparent:true,
   scale: {
     width: 800,
     height: 600,

@@ -3,6 +3,10 @@ import { CollisionCategory } from '../collision_category';
 import { CharacterController, EffectState, SoundType } from '../module/controller';
 import { POEModule } from '../module/poe.module';
 import { Invincible, InvincibleStar, MarioModule } from '../module/mario.module';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
+import { ApiClient } from '@twurple/api';
+import { AuthProvider, StaticAuthProvider } from '@twurple/auth';
+import { MockAuthProvider } from '../twitch/mock_auth_provider';
 export default class Demo extends Phaser.Scene {
   fish!: Phaser.GameObjects.Image;
   fishEatingBox!: MatterJS.BodyType;
@@ -35,15 +39,71 @@ export default class Demo extends Phaser.Scene {
     MarioModule.preload(this);
   }
 
+  getConfig(): { twitch: boolean; mock: boolean; clientId: string | null; accessToken: string | null; userId: string | null; } {
+    let params = (new URL(location.href)).searchParams;
+    return {
+      twitch: params.get('twitch') === 'true' ?? false,
+      mock: params.get('mock') === 'true' ?? false,
+      clientId: params.get('clientId'),
+      accessToken: params.get('accessToken'),
+      userId: params.get('userId'),
+    }
+  }
+
+  initTwitch(config: { twitch: boolean; mock: boolean; clientId: string | null; accessToken: string | null; userId: string | null; }) {
+    if (config.clientId == null || config.accessToken == null || config.userId == null) {
+      let errorText = this.add.text(150, 500, this.texts[0],
+        {
+          fontSize: '20px',
+          align: 'center',
+          color: '#ff0000'
+        },).setPadding(2);
+      errorText.text = 'Twitch Mode 初始化失敗，缺少 clientId 或 accessToken 或 userId';
+      return false;
+    }
+    let authProvider: AuthProvider;
+    if (config.mock) {
+      authProvider = new MockAuthProvider(config.clientId!, config.accessToken!, config.userId);
+    } else {
+      authProvider = new StaticAuthProvider(config.clientId!, config.accessToken!);
+    }
+
+    const listener = new EventSubWsListener({
+      apiClient: new ApiClient({
+        authProvider: authProvider,
+        mockServerPort: config.mock ? 8080 : undefined,
+      }),
+    });
+    listener.onChannelRedemptionAddForReward(config.userId, 'colorOrb', (data) => {
+      this.controller.createOrb(400, 100);
+    });
+    listener.start();
+    return true;
+
+  }
+
 
   create() {
+    let config = this.getConfig();
+    if (config.twitch) {
+      if (!this.initTwitch(config)) {
+        return;
+      }
+    }
+
+    if (!config.twitch) {
+      this.cameras.main.setBackgroundColor("#090300");
+    }
+
+
     this.display = this.add.text(150, 500, this.texts[0],
       {
         fontSize: '20px',
         align: 'center',
-        color: '#b9b079'
+        color: config.twitch ? '#000000' : '#b9b079',
       },).setPadding(2);
-    this.add.image(400, 50, 'spot').setScale(0.4, 0.6);
+    // this.display.visible = !config.twitch;
+    this.add.image(400, 50, 'spot').setScale(0.4, 0.6).setVisible(!config.twitch);
 
     this.fish = this.add.image(400, 400, 'fish').setScale(0.2);
     this.fishEatingBox = this.matter.add.rectangle(400, 400, 80, 30, { isStatic: true, isSensor: false });
@@ -114,14 +174,14 @@ export default class Demo extends Phaser.Scene {
       }
     });
     this.controller.on('effect', (event) => {
-      if(event.effect instanceof Invincible && event.state === EffectState.inactive){
+      if (event.effect instanceof Invincible && event.state === EffectState.inactive) {
         this.display.text = '沒有用啊！！！！！';
       }
     })
   }
 
   update(time: number, delta: number): void {
-    this.controller.update(time, delta);
+    this.controller?.update(time, delta);
   }
 }
 
