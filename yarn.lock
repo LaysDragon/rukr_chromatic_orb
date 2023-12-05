@@ -37,10 +37,20 @@
   dependencies:
     "node-fetch" "^2.6.12"
 
+"@d-fischer/deprecate@^2.0.2":
+  "integrity" "sha512-wlw3HwEanJFJKctwLzhfOM6LKwR70FPfGZGoKOhWBKyOPXk+3a9Cc6S9zhm6tka7xKtpmfxVIReGUwPnMbIaZg=="
+  "resolved" "https://registry.npmjs.org/@d-fischer/deprecate/-/deprecate-2.0.2.tgz"
+  "version" "2.0.2"
+
 "@d-fischer/detect-node@^3.0.1":
   "integrity" "sha512-0Rf3XwTzuTh8+oPZW9SfxTIiL+26RRJ0BRPwj5oVjZFyFKmsj9RGfN2zuTRjOuA3FCK/jYm06HOhwNK+8Pfv8w=="
   "resolved" "https://registry.npmjs.org/@d-fischer/detect-node/-/detect-node-3.0.1.tgz"
   "version" "3.0.1"
+
+"@d-fischer/escape-string-regexp@^5.0.0":
+  "integrity" "sha512-7eoxnxcto5eVPW5h1T+ePnVFukmI9f/ZR9nlBLh1t3kyzJDUNor2C+YW9H/Terw3YnbZSDgDYrpCJCHtOtAQHw=="
+  "resolved" "https://registry.npmjs.org/@d-fischer/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz"
+  "version" "5.0.0"
 
 "@d-fischer/isomorphic-ws@^7.0.0":
   "integrity" "sha512-bydCy1tKvPKvyF0KeDvN1aiAZA4CzQVa2gHifNQczW9Czl89vZ4QHnJMjUcTboWKecbnz5mGiM9PjKA1Xx2Dyg=="
@@ -159,6 +169,21 @@
     "@d-fischer/typed-event-emitter" "^3.3.1"
     "@twurple/api-call" "7.1.0-pre.1"
     "@twurple/common" "7.1.0-pre.1"
+    "tslib" "^2.0.3"
+
+"@twurple/chat@^7.1.0-pre.1":
+  "integrity" "sha512-81BL2+FF1BJdaN2O256oFCCb+4NsnkDh3wYZaoDhH/XUyyBj3eUiLvJE8DyCEEvzrG0BbkLjOqpVHc9YeWz89A=="
+  "resolved" "https://registry.npmjs.org/@twurple/chat/-/chat-7.1.0-pre.1.tgz"
+  "version" "7.1.0-pre.1"
+  dependencies:
+    "@d-fischer/cache-decorators" "^4.0.0"
+    "@d-fischer/deprecate" "^2.0.2"
+    "@d-fischer/logger" "^4.2.1"
+    "@d-fischer/rate-limiter" "^1.0.0"
+    "@d-fischer/shared-utils" "^3.6.1"
+    "@d-fischer/typed-event-emitter" "^3.3.0"
+    "@twurple/common" "7.1.0-pre.1"
+    "ircv3" "^0.32.3"
     "tslib" "^2.0.3"
 
 "@twurple/common@7.1.0-pre.1":
@@ -373,6 +398,19 @@
   "resolved" "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
   "version" "2.0.4"
 
+"ircv3@^0.32.3":
+  "integrity" "sha512-H0ejwbIPzJO73PPGJGrdEDrqRxxK0f+6/7kNZ7yY/ukTDZ8zy7w7mN4wMbmOFrnPYO78ZKnbeqmkBRgcVJ552Q=="
+  "resolved" "https://registry.npmjs.org/ircv3/-/ircv3-0.32.3.tgz"
+  "version" "0.32.3"
+  dependencies:
+    "@d-fischer/connection" "^8.0.5"
+    "@d-fischer/escape-string-regexp" "^5.0.0"
+    "@d-fischer/logger" "^4.2.1"
+    "@d-fischer/shared-utils" "^3.5.0"
+    "@d-fischer/typed-event-emitter" "^3.3.0"
+    "klona" "^2.0.5"
+    "tslib" "^2.4.1"
+
 "is-core-module@^2.8.1":
   "integrity" "sha512-+5FPy5PnwmO3lvfMb0AsoPaBG+5KHUI0wYFXOtYPnVVVspTFUuMZNfNaNVRt3FZadstu2c8x23vykRW/NBoU6A=="
   "resolved" "https://registry.npmjs.org/is-core-module/-/is-core-module-2.9.0.tgz"
@@ -394,7 +432,7 @@
   dependencies:
     "argparse" "^2.0.1"
 
-"klona@^2.0.4":
+"klona@^2.0.4", "klona@^2.0.5":
   "integrity" "sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA=="
   "resolved" "https://registry.npmjs.org/klona/-/klona-2.0.6.tgz"
   "version" "2.0.6"

@@ -7,6 +7,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { ApiClient } from '@twurple/api';
 import { AuthProvider, StaticAuthProvider } from '@twurple/auth';
 import { MockAuthProvider } from '../twitch/mock_auth_provider';
+import { ChatClient, ChatMessage } from '@twurple/chat';
 export default class Demo extends Phaser.Scene {
   fish!: Phaser.GameObjects.Image;
   fishEatingBox!: MatterJS.BodyType;
@@ -39,45 +40,76 @@ export default class Demo extends Phaser.Scene {
     MarioModule.preload(this);
   }
 
-  getConfig(): { twitch: boolean; mock: boolean; clientId: string | null; accessToken: string | null; userId: string | null; } {
+  getConfig(): Config {
     let params = (new URL(location.href)).searchParams;
     return {
-      twitch: params.get('twitch') === 'true' ?? false,
+      twitch: params.get('twitch') as "none" | "point" | "chat" ?? 'none',
       mock: params.get('mock') === 'true' ?? false,
       clientId: params.get('clientId'),
       accessToken: params.get('accessToken'),
       userId: params.get('userId'),
+      channel: params.get('channel'),
     }
   }
 
-  initTwitch(config: { twitch: boolean; mock: boolean; clientId: string | null; accessToken: string | null; userId: string | null; }) {
-    if (config.clientId == null || config.accessToken == null || config.userId == null) {
-      let errorText = this.add.text(150, 500, this.texts[0],
-        {
-          fontSize: '20px',
-          align: 'center',
-          color: '#ff0000'
-        },).setPadding(2);
-      errorText.text = 'Twitch Mode 初始化失敗，缺少 clientId 或 accessToken 或 userId';
-      return false;
-    }
-    let authProvider: AuthProvider;
-    if (config.mock) {
-      authProvider = new MockAuthProvider(config.clientId!, config.accessToken!, config.userId);
-    } else {
-      authProvider = new StaticAuthProvider(config.clientId!, config.accessToken!);
+  initTwitch(config: Config) {
+    if (config.twitch === 'point') {
+
+      if (config.clientId == null || config.accessToken == null || config.userId == null) {
+        let errorText = this.add.text(150, 500, this.texts[0],
+          {
+            fontSize: '20px',
+            align: 'center',
+            color: '#ff0000'
+          },).setPadding(2);
+        errorText.text = 'Twitch Point Mode 初始化失敗，缺少 clientId 或 accessToken 或 userId';
+        return false;
+      }
+
+      let authProvider: AuthProvider;
+      if (config.mock) {
+        authProvider = new MockAuthProvider(config.clientId!, config.accessToken!, config.userId);
+      } else {
+        authProvider = new StaticAuthProvider(config.clientId!, config.accessToken!);
+      }
+
+      const listener = new EventSubWsListener({
+        apiClient: new ApiClient({
+          authProvider: authProvider,
+          mockServerPort: config.mock ? 8080 : undefined,
+        }),
+      });
+      listener.onChannelRedemptionAddForReward(config.userId, 'colorOrb', (data) => {
+        this.controller.createOrb(400 + Phaser.Math.Between(-150, 150), 100);
+      });
+      listener.start();
     }
 
-    const listener = new EventSubWsListener({
-      apiClient: new ApiClient({
-        authProvider: authProvider,
-        mockServerPort: config.mock ? 8080 : undefined,
-      }),
-    });
-    listener.onChannelRedemptionAddForReward(config.userId, 'colorOrb', (data) => {
-      this.controller.createOrb(400, 100);
-    });
-    listener.start();
+    if (config.twitch === 'chat') {
+      if (config.channel == null) {
+        let errorText = this.add.text(150, 500, this.texts[0],
+          {
+            fontSize: '20px',
+            align: 'center',
+            color: '#ff0000'
+          },).setPadding(2);
+        errorText.text = 'Twitch Chat Mode 初始化失敗，缺少 channel 參數';
+        return false;
+      }
+
+      const chatClient = new ChatClient({ channels: [config.channel] });
+      chatClient.connect();
+      const keywords = [
+        '幻色石',
+        'chromatic',
+      ];
+      const commandRegex = new RegExp(`!(${keywords.join('|')})`);
+      chatClient.onMessage(async (channel: string, user: string, text: string, msg: ChatMessage) => {
+        if (commandRegex.test(msg.text)) {
+          this.controller.createOrb(400 + Phaser.Math.Between(-150, 150), 100);
+        }
+      });
+    }
     return true;
 
   }
@@ -85,13 +117,13 @@ export default class Demo extends Phaser.Scene {
 
   create() {
     let config = this.getConfig();
-    if (config.twitch) {
+    if (config.twitch !== 'none') {
       if (!this.initTwitch(config)) {
         return;
       }
     }
 
-    if (!config.twitch) {
+    if (config.twitch === 'none') {
       this.cameras.main.setBackgroundColor("#090300");
     }
 
@@ -100,10 +132,10 @@ export default class Demo extends Phaser.Scene {
       {
         fontSize: '20px',
         align: 'center',
-        color: config.twitch ? '#000000' : '#b9b079',
+        color: config.twitch !== 'none' ? '#000000' : '#b9b079',
       },).setPadding(2);
     // this.display.visible = !config.twitch;
-    this.add.image(400, 50, 'spot').setScale(0.4, 0.6).setVisible(!config.twitch);
+    this.add.image(400, 50, 'spot').setScale(0.4, 0.6).setVisible(config.twitch === 'none');
 
     this.fish = this.add.image(400, 400, 'fish').setScale(0.2);
     this.fishEatingBox = this.matter.add.rectangle(400, 400, 80, 30, { isStatic: true, isSensor: false });
@@ -188,3 +220,11 @@ export default class Demo extends Phaser.Scene {
 
 
 
+interface Config {
+  twitch: 'point' | 'chat' | 'none';
+  mock: boolean;
+  clientId: string | null;
+  accessToken: string | null;
+  userId: string | null;
+  channel: string | null;
+}
